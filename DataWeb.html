@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      .legend {
+        position: fixed;
+        top: 0;
+        right: 0;
+      }
+      .legend {
+        list-style: none;
+      }
+      .legend li {
+        float: left;
+        margin-right: 10px;
+      }
+      .legend span {
+        border: 1px solid #ccc;
+        float: left;
+        width: 20px;
+        height: 20px;
+        margin: 2px;
+      }
+      .legend li {
+        font-size: 20px;
+      }
+      li.si {
+        color: green;
+      }
+      li.so {
+        color: blue;
+      }
+      li.no {
+        color: orange;
+      }
+      body,
+      html,
+      svg,
+      #container {
+        margin: 0;
+        padding: 0;
+        width: 200%;
+        height: 200%;
+        font-family: verdana;
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+
+      }
+
+      #controls {
+        position: absolute;
+        top: 0;
+        left: 0px;
+        padding: 4px;
+        border-bottom: 1px solid #ccc;
+        width: 100%;
+        font-size: 0.7em;
+      }
+
+      #controls input {
+        font-size: 14px;
+      }
+
+      #controls input[type="button"],
+      #controls input[type="submit"] {
+        font-size: 18px;
+      }
+    </style>
+    <link rel="stylesheet" href="ggraph.css" />
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.4/html2canvas.min.js"></script>
+    <script src="marker.js"></script>
+
+    <script src="simmelian.js"></script>
+    <script src="singles.js"></script>
+
+    <script src="ladjust.js"></script>
+
+    <script src="makecluster.js"></script>
+    <script src="labels.js"></script>
+    <script src="groups.js"></script>
+    <script src="nodes.js"></script>
+    <script src="selection.js"></script>
+
+    <script src="member_lines.js"></script>
+
+    <script src="merger.js"></script>
+    <script src="splitter.js"></script>
+    <script src="remover.js"></script>
+
+    <script src="ggraph.js"></script>
+    <title>ggraph demo</title>
+  </head>
+  <body>
+    <div id="controls">
+      <input
+        type="radio"
+        name="mode"
+        value="select"
+        checked="checked"
+        id="mode-select"
+        onclick="ggraph.set_mode('select')"
+      />
+
+      <input
+        type="radio"
+        name="mode"
+        value="drag"
+        id="mode-drag"
+        onclick="ggraph.set_mode('drag')"
+      />
+
+      <script>
+        document.getElementById("mode-select").style.display = "none";
+        document.getElementById("mode-drag").style.display = "none";
+        document.getElementById("filter").style.display = "none";
+      </script>
+
+      <input type="file" id="file-input" accept="text/xml,application/json" />
+      <input type="button" value="Clear" onClick="document.location.reload(true)"/>
+      <input type="button" value="Reset" onClick="reset()"/>
+      <input type="button" value="Expand" onclick="_backbones()" />
+      <input type="button" value="Schrink" onclick="_unbackbones()" />
+      <input type="button" value="Filter" id="filter" onclick="_set_filter()" />
+      <input type="text" placeholder="Comment..." id="comment" />
+      <input type="button" id="comment1" value="Commit" onclick="_set_comment()"/>
+      <input type="button" value="Name" onclick="_show_name()()"/>
+      <input type="button" value="Capture" onclick="capture()"/>
+      <input type="button" value="Download" onclick="onDownload()" />  
+      
+      Nodes: <span id="node-count">0</span> Edges:
+      <span id="edge-count">0</span>
+      <div class="legend">
+        <ul>
+            <li class="si">Sink &nbsp;</li>
+            <li class="no">node &nbsp;</li>
+            <li class="so">Source</li>
+          </ul>
+      </div>
+    </div>
+    <div id="output"></div>
+    <div id="container"></div>
+
+  </body>
+  <script>
+    var all;
+    var selected;
+    var graph;
+    var converted;
+    var type = null;
+
+    ggraph.init("container", 25);
+
+    var remove = function () {
+      var s = [];
+      for (var k in selected) {
+        s.push({ id: k });
+
+        for (i = 0; i < graph.links.length; i++) {
+          let A = graph.links[i].source
+          let B = graph.links[i].target
+
+          if (k == A || k == B) {
+            graph.links.splice(i, 1);
+            i = i - 1;
+          }
+        }
+        for (i = 0; i < Sink.length; i++) {
+          if (k == Sink[i]) {
+            Sink.splice(i, 1);
+          }
+        }
+      }
+      ggraph.remove(s);
+    };
+
+    function reset(){
+        document.getElementById("node-count").innerHTML =
+                    graph.nodes.length;
+                  document.getElementById("edge-count").innerHTML =
+                    graph.links.length;
+                  converted = ggraph.convert(graph);
+                  ggraph.draw(converted);
+                  reader.readAsDataURL(this.files[0]);
+
+    }
+    function _backbones(e) {
+      var res = simmelian.filter(converted.all_links, 1);
+      ggraph.filter_links(res);
+    }
+
+    function _unbackbones(e) {
+      var res = simmelian.filter(converted.all_links, 0);
+      ggraph.filter_links(res);
+    }
+
+
+    function _set_filter() {
+      //selected node
+      let s = [];
+      for (var k in selected) s.push(k);
+
+      var Filtered = s;
+
+      if (Sink.includes(String(Object.values(Filtered)))) return;
+
+      // node suchen
+      for (i = 0; i < graph.nodes.length; i++) {
+        if (graph.nodes[i].id == Filtered) {
+          // links filteren
+          let NewLinks = [];
+          let Newnodes = [];
+          let NewSinks = [];
+          let Bool = true;
+          let Filtered0 = Filtered;
+          let index = 0;
+          let array2 = [];
+           
+          while (Bool) {
+
+            let n = 0; 
+            for (j = 0; j < graph.links.length; j++) {
+              let A = graph.links[j].source
+              let B = graph.links[j].target
+
+              if (A == Filtered) {
+                n = 1;
+                index = j;
+              }
+              
+             if(n == 1) {
+
+               if(!(Sink.includes(B))) {
+                NewLinks.push(graph.links[j]);
+
+            }
+
+            //Sink  erreicht
+             if (Sink.includes(B)) {
+               NewSinks.push(B);
+               NewLinks.push(graph.links[j]);
+               
+               graph.links.splice(index, 1);
+               j =  graph.links.length;
+            }
+        }    
+        }
+                //fertig
+                if (n == 0) {
+                  Sink = NewSinks;
+                  Bool = false;
+                  graph.links = [];
+                  graph.links = NewLinks;
+                  let DeleteArray = [];
+                 
+                //New nodes erstellen
+                for (j = 0; j < graph.links.length; j++)  {
+                  for (i = 0; i < graph.nodes.length; i++){ 
+
+                  let A = graph.links[j].source
+
+                   if(A == graph.nodes[i].id){
+                    if (!(array2.indexOf(graph.nodes[i].id) > -1)) {
+                        array2.push(graph.nodes[i].id);
+                        Newnodes.push(graph.nodes[i]);
+                   }
+                  }
+                         
+                }
+
+                for (i = 0; i < graph.nodes.length; i++){ 
+                let B = graph.links[j].target
+
+                    if(B == graph.nodes[i].id){
+                      if (!(array2.indexOf(graph.nodes[i].id) > -1)) {
+                      array2.push(graph.nodes[i].id);
+                     Newnodes.push(graph.nodes[i]);
+      }
+     }   
+}
+}
+                      graph.nodes = [];
+                      graph.nodes = Newnodes;  
+
+                  //Graph zeigen
+                  document.getElementById("node-count").innerHTML =
+                    graph.nodes.length;
+                  document.getElementById("edge-count").innerHTML =
+                    graph.links.length;
+                  converted = ggraph.convert(graph);
+                  ggraph.draw(converted);
+                  reader.readAsDataURL(this.files[0]);
+                
+              }
+            }
+            
+          }
+        }
+      }
+
+    
+    function _show_name() {
+      //selected node
+      let s = [];
+      
+      for (var k in selected){
+         s.push(k);
+
+         let s1 = String(s).split('(')[0];
+         let s2 = String(s1).split(' ')[2];
+      document.getElementById("comment").value = s2;
+      document.getElementById("comment1").click();
+    }
+}
+
+
+    function _set_comment() {
+      if (selection.all().length === 0) return;
+      var comment = document.getElementById("comment").value;
+      var mock = ggraph.convert({
+        nodes: [{ id: comment, type: "comment" }],
+        links: [],
+      });
+
+      var original = ggraph.get_graph();
+      var comment_obj = mock.nodes[0];
+
+      original.nodes.push(comment_obj);
+
+      for (var key in mock.member_map) {
+        original.member_map[key] = mock.member_map[key];
+      }
+
+      for (var key in mock.group_map) {
+        original.group_map[key] = original.nodes.length - 1;
+      }
+
+      document.getElementById("comment").value = "";
+
+      original.all_links[comment] = {};
+
+      var tx = 0;
+      var ty = 0;
+
+      selection.all().map(function (selected) {
+        var group_id = original.member_map[selected.id].group;
+        var target = original.nodes[original.group_map[group_id]];
+        tx += target.x;
+        ty += target.y;
+
+        original.all_links[comment][selected.id] = 1;
+        original.links.push({
+          source: comment_obj,
+          target: target,
+          value: 1,
+        });
+      });
+
+      comment_obj.x = tx / selection.all().length;
+      comment_obj.y = ty / selection.all().length;
+     graph = original;
+      ggraph.draw(original);
+
+      selection.clear();
+
+      
+    }
+
+    function capture () {
+      html2canvas(document.getElementById("container")).then((canvas) => {
+        let a = document.createElement("a");
+        a.download = "ss.png";
+        a.href = canvas.toDataURL("image/png");
+        a.click();
+      });
+    }
+
+    ggraph.on_select(function (_all, _selected) {
+      all = selection.all();
+      selected = selection.selected();
+    });
+
+
+function download(content, fileName, contentType) {
+    const a = document.createElement("a");
+    const file = new Blob([content], { type: contentType });
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
+}
+
+function onDownload() {
+    JSONFILE = [];
+
+     let n = -1;
+     for (i = 0; i < graph.nodes.length; i++) {
+
+if (graph.nodes[i].type == 'Green' ) {
+    JSONFILE.push({
+                  "id": i, 
+                   "type": "sink", 
+                   "text": graph.nodes[i].id, 
+                   "children":[], 
+                   "comment": ""
+                  })
+   
+ } else {
+    if (graph.nodes[i].type == "")
+      JSONFILE.push({
+                   "id": i, 
+                   "type": "source", 
+                   "text": graph.nodes[i].id, 
+                   "children":[], 
+                   "comment": "" ,
+                  })
+                       
+
+         else 
+         if(graph.nodes[i].type == "Orange")
+         JSONFILE.push({
+                        "id": i, 
+                        "type": "node", 
+                        "text": graph.nodes[i].id, 
+                        "children":[], 
+                        "comment": ""
+                      })
+         }
+      }
+ 
+      for (j = 0; j < graph.nodes.length ; j++)
+         for (i = 0; i < graph.links.length ; i++) {
+             if(graph.links[i].source == graph.nodes[j].id){
+                 for(z = 0; z < JSONFILE.length ; z++)
+                      if(JSONFILE[z].text == graph.links[i].target)
+                         if(!JSONFILE[j].children.includes(JSONFILE[z].id))
+                              JSONFILE[j].children.push(JSONFILE[z].id)
+             }
+            
+         }
+     
+download(JSON.stringify(JSONFILE,null,3), "Test.json", "text/plain");
+}
+   
+    function Change() {
+
+         if(document.getElementById("Switch").value == "cyclic"){
+        document.getElementById("Switch").value="acyclic";
+        document.getElementById("filter").style.display = "";
+        
+         }
+        else {
+        document.getElementById("Switch").value= "cyclic"
+        document.getElementById("filter").style.display = "none";
+        }
+
+      SWITCH = !SWITCH;
+       
+    }
+
+    var graph = {
+      nodes: [],
+      links: [],
+    };
+
+    let Sink = [];
+    let Sources = [];
+    let Knoten = [];;
+    const file_input = document.querySelector("#file-input");
+    let SWITCH = false;
+  
+    file_input.addEventListener("change", function () {
+      var up_File = file_input.files[0];
+    
+
+       // xmL file 
+      if (up_File.type === "text/xml") {
+    
+        let xmlContent = "";
+        const reader = new FileReader();
+        reader.addEventListener("load", () => {
+          const uploaded_file = reader.result;
+          fetch(uploaded_file).then((response) => {
+            response.text().then((xml) => {
+              xmlContent = xml;
+
+              let parser = new DOMParser();
+              let xmlDOM = parser.parseFromString(
+                xmlContent,
+                "application/xml"
+              );
+              let Source = xmlDOM.querySelectorAll("Source");
+
+              Source.forEach((EachSource) => {
+                let Methode = [];
+                let n = 0;
+
+                if (EachSource.getAttributeNode("Statement").nodeValue.includes(":"))
+                 {
+                    let S =
+                    EachSource.getAttributeNode("Statement").nodeValue.split(":");
+
+                    let X = S[S.length - 1];
+                    let M = X.split(">");
+                    
+                    let C = S[0].split("<");
+                    //let node = C[1] + " " + M[0];
+  
+                    let node = M[0]
+                    if (node.indexOf(")") == -1) {
+                      node = node + "()";
+                    }
+                    Methode.push(node);
+                   
+                 }
+                //PathElement
+                let PathElement = EachSource.querySelectorAll("PathElement");
+                PathElement.forEach((EachPath) => {
+                  if (EachPath.getAttributeNode("Statement").nodeValue.includes(":"))
+                   {
+                    let S =
+                      EachPath.getAttributeNode("Statement").nodeValue.split(":");
+
+                    let X = S[S.length - 1];
+                    let M = X.split(">");
+
+                    let C = S[0].split("<");
+                   // let node = C[1] + " " + M[0];
+                      let node = M[0] 
+                   if (node.indexOf(")") == -1) {
+                      node = node + "()";
+                    }
+                    if(!SWITCH)
+                      Methode.push(node);
+                    
+                   else{
+                     if (!(Methode.indexOf(node) > -1)){
+                        Methode.push(n+')'+node);
+                        n = n+1;
+                      }
+                     }
+
+                  }
+                });
+
+                for (i = 0; i < Methode.length; i++) {
+                  if (!(Knoten.indexOf(Methode[i]) > -1)) {
+                    Knoten.push(Methode[i]);
+                    if (i + 1 == Methode.length) {
+                      graph.nodes.push({ id: Methode[i], type: "Green" });
+                      Sink.push(Methode[i]);
+                    } else {
+                      if (i  == 0){
+                        graph.nodes.push({ id: Methode[i], type: "" });
+                        Sources.push(Methode[i]);
+                      }
+                      else graph.nodes.push({ id: Methode[i], type: "Orange" });
+                    }
+                  }
+                }
+
+                for (i = 0; i < Methode.length - 1; i++) {   
+                  graph.links.push({
+                    source: Methode[i],
+                    target: Methode[i + 1],
+                  });
+                
+            }
+              });
+           
+              document.getElementById("node-count").innerHTML =
+                graph.nodes.length;
+              document.getElementById("edge-count").innerHTML =
+                graph.links.length;
+
+              converted = ggraph.convert(graph);
+
+              ggraph.draw(converted);
+            });
+          });
+        });
+        reader.readAsDataURL(this.files[0]);
+        document.getElementById("mode-drag").click();
+      }
+
+      //JSON File
+      if (up_File.type === "application/json") {
+        
+        var reader = new FileReader();
+        reader.onload = function () {
+        let  data= JSON.parse(reader.result);
+
+         //Nodes
+         let Knoten = [];
+          for (i = 0; i < data.length; i++) {
+            if (!(Knoten.indexOf(data[i].text) > -1)) {
+              Knoten.push(data[i].text);
+
+            if (data[i].type == "sink") {
+              graph.nodes.push({ id: data[i].text, type: "Green" });
+              Sink.push(data[i].text);
+            }
+              if (data[i].type == "node")
+                graph.nodes.push({ id: data[i].text, type: "Orange" });
+
+                if(data[i].type == "source") {
+               graph.nodes.push({ id: data[i].text, type: "" });
+            
+          }
+        }
+        }
+
+          for (i = 0; i < data.length; i++) {
+            for (j = 0; j < data[i].children.length; j++) {
+              for (z = 0; z < data.length; z++) {
+                if (data[i].children[j] == data[z].id) {
+                  graph.links.push({
+                    source: data[i].text,
+                    target: data[z].text,
+                  });
+                }
+              }
+            }
+          }
+          
+
+          document.getElementById("node-count").innerHTML = graph.nodes.length;
+          document.getElementById("edge-count").innerHTML = graph.links.length;
+
+          converted = ggraph.convert(graph);
+
+          ggraph.draw(converted);
+
+          reader.readAsDataURL(this.files[0]);
+         
+        };
+        reader.readAsText(up_File);
+        document.getElementById("mode-drag").click();
+       
+       
+      }
+    });
+  </script>
+</html>
