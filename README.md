@@ -14,8 +14,8 @@ Die Funktionen der Buttons im Topbar:
 Clear: löscht den existierenden Graph und ermöglicht erneut das hochladen von xml file
 Reset: zeigt das Graph in orginal Form
 Expand: zeigt die Knoten weit auseinander
-Shrink: 
-Filter: zeigt den pfad von source- bis sinkknote an
+Shrink: zeigt die Knoten näher zueinander(nachdem klicken von Expand)
+Filter: zeigt den pfad von source- bis sinkknote
 Commit: wenn einer knoten geklickt ist und dann auf commit klicken dann wird commit das Kommentar in "comment" Feld in dieser Knote gespeichert
 Name: wenn einer knoten geklickt ist und Name klicken dann wird das Name von den Mehtode angezeigt
 Capture: macht einen screenshot von dem Graph
