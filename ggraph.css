@@ -1,13 +1,13 @@
 body {
-  background-color: #F4F5F4;
+  background-color: #f3f6f3;
 }
 
 svg[name=filtered] .links line {
-  stroke: #888;
+  stroke: rgb(184, 87, 87);
 }
 
 .links line {
-  stroke: #aaa;
+  stroke: rgb(184, 87, 87);
   stroke-opacity: 1;
 }
 
@@ -15,12 +15,13 @@ text.label,
 rect.text-background,
 rect.text-background-background {
   display: none;
+
 }
 
 g.visible text.label {
   display: block;
   font-family: verdana;
-  font-size: 10px;
+  font-size: 15px;
 }
 
 g.visible rect.text-background {
@@ -36,7 +37,7 @@ g.visible rect.text-background {
 }
 
 path {
-  stroke: #fff;
+  stroke: rgb(187, 184, 184);
   stroke-opacity: 1;
   stroke-width: 1;
 }
@@ -77,6 +78,7 @@ g.membernode circle:hover {
 svg[name=filtered] g.membernode circle,
 svg[name=filtered] g.membernode path {
   opacity: 0.3;
+  stroke: rgb(243, 242, 242);
 }
 
 svg[name=filtered] g.membernode circle[name=selected],
@@ -87,12 +89,13 @@ svg[name=filtered] g.membernode path[name=contact] {
 }
 
 svg[name=filtered] g.membernode circle.member-background {
-  fill: #F4F5F4;
-  opacity: 1;
+  fill: #fefbfb;
+  opacity: 0;
 }
 
-svg[name=filtered] line.rel {
-  opacity: 0.3;
+svg[name=filtered] line.rel{
+  opacity: 0.5;
+  
 }
 
 line[type=comment] {
@@ -100,12 +103,13 @@ line[type=comment] {
 }
 
 g[name=backbone] line.rel[name="filtered"] {
-  stroke: #ddd;
+  stroke: rgb(184, 87, 87)
 
 }
 
 .labels polyline {
   display: none;
+  
 }
 
 .labels polyline.visible {
@@ -113,14 +117,14 @@ g[name=backbone] line.rel[name="filtered"] {
   display: block;
   stroke: blue;
   stroke-width: 1;
-  z-index: 1;
-   stroke-dasharray: 2;
+  z-index: 10;
+   stroke-dasharray: 4;
 }
 
 line.selected {
-  stroke: red;
-  stroke-width: 1;
-  stroke-dasharray: 2;
+  stroke: rgb(255, 254, 254);
+  stroke-width: 0;
+  stroke-dasharray: 0;
 }
 
 svg {

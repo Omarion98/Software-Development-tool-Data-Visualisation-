@@ -3,6 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <style>
+
+
+       span.radio {
+
+        font-size: 14px;
+        font-family: Gill Sans
+       }
+
       .legend {
         position: fixed;
         top: 0;
@@ -23,16 +31,17 @@
         margin: 2px;
       }
       .legend li {
-        font-size: 20px;
+        font-size: 19px;
+        font-family: Gill Sans
       }
       li.si {
-        color: green;
+        color: rgb(36, 184, 36);
       }
       li.so {
-        color: blue;
+        color: rgb(40, 40, 205);
       }
       li.no {
-        color: orange;
+        color: rgb(222, 160, 44);
       }
       body,
       html,
@@ -40,10 +49,9 @@
       #container {
         margin: 0;
         padding: 0;
-        width: 200%;
-        height: 200%;
-        font-family: verdana;
-        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        
         width: 100%;
         height: 100%;
 
@@ -54,19 +62,30 @@
         top: 0;
         left: 0px;
         padding: 4px;
-        border-bottom: 1px solid #ccc;
+    
         width: 100%;
         font-size: 0.7em;
+        background-color: rgb(169, 227, 169);
+      
       }
 
       #controls input {
-        font-size: 14px;
+        font-size: 12px;
       }
 
       #controls input[type="button"],
-      #controls input[type="submit"] {
+      #controls input[type="submit"]
+      #controls input[type="radio"]  {
         font-size: 18px;
+        border: 1px solid rgb(62, 65, 62);
+        font-family: Gill Sans
       }
+      body {
+        overflow: hidden;
+    }
+
+
+
     </style>
     <link rel="stylesheet" href="ggraph.css" />
     <script src="https://d3js.org/d3.v4.min.js"></script>
@@ -115,27 +134,30 @@
       <script>
         document.getElementById("mode-select").style.display = "none";
         document.getElementById("mode-drag").style.display = "none";
-        document.getElementById("filter").style.display = "none";
+        
       </script>
 
-      <input type="file" id="file-input" accept="text/xml,application/json" />
-      <input type="button" value="Clear" onClick="document.location.reload(true)"/>
-      <input type="button" value="Reset" onClick="reset()"/>
-      <input type="button" value="Expand" onclick="_backbones()" />
-      <input type="button" value="Schrink" onclick="_unbackbones()" />
-      <input type="button" value="Filter" id="filter" onclick="_set_filter()" />
-      <input type="text" placeholder="Comment..." id="comment" />
-      <input type="button" id="comment1" value="Commit" onclick="_set_comment()"/>
-      <input type="button" value="Name" onclick="_show_name()()"/>
-      <input type="button" value="Capture" onclick="capture()"/>
-      <input type="button" value="Download" onclick="onDownload()" />  
-      
+      <input type="file" style="font-size: 14px;border: 1px solid rgb(62, 65, 62);font-family: Gill Sans" 
+      id="file-input" accept="text/xml,application/json" />
+      <input type="button" id="clear" value="Clear" onClick="document.location.reload(true)" onmouseover="mouseover(this.id)" onmouseout="mouseout(this.id)"/>
+      <input type="button" id="button" value="Reset" onclick="reset()" onmouseover="mouseover(this.id)" onmouseout="mouseout(this.id)"/>
+      <input type="button" id="Switch" value="acyclic" onclick="Change()" onmouseover="mouseover(this.id)" onmouseout="mouseout(this.id)"/>
+      <input type="button" value="Expand" id="backbones" onclick="_backbones()" onmouseover="mouseover(this.id)" onmouseout="mouseout(this.id)"/>
+      <input type="button" value="Schrink" id="unbackbones" onclick="_unbackbones()" onmouseover="mouseover(this.id)" onmouseout="mouseout(this.id)"/>
+      <input type="button" value="Filter" id="filter" onclick="_set_filter()" onmouseover="mouseover(this.id)" onmouseout="mouseout(this.id)"/>
+      <input type="text"   placeholder="Comment..." id="comment"/>
+      <input type="button" id="comment1" value="Commit" onclick="_set_comment()" onmouseover="mouseover(this.id)" onmouseout="mouseout(this.id)"/>
+      <input type="button" id="capture" value="Capture" onclick="capture()" onmouseover="mouseover(this.id)" onmouseout="mouseout(this.id)"/>
+      <input type="button" id="dowload" value="Download" onclick="onDownload()" onmouseover="mouseover(this.id)" onmouseout="mouseout(this.id)"/>  
+      <input type="radio" style="font-size: 14px" value="ALLE" id="ALLE" onclick="AlleEinzige(this)" name='frm'/><span class="radio" >Alle</span>
+      <input type="radio" value="Einzige" id="Einzige" onclick="AlleEinzige(this)" name='frm'/><span class="radio">Einzige</span>
+      &nbsp;| &nbsp; 
       Nodes: <span id="node-count">0</span> Edges:
       <span id="edge-count">0</span>
       <div class="legend">
         <ul>
-            <li class="si">Sink &nbsp;</li>
-            <li class="no">node &nbsp;</li>
+            <li class="si">Sink &nbsp;&nbsp;</li>
+            <li class="no">Node &nbsp;&nbsp;</li>
             <li class="so">Source</li>
           </ul>
       </div>
@@ -153,7 +175,41 @@
 
     ggraph.init("container", 25);
 
-    var remove = function () {
+
+
+    let allindex = 0;
+
+    function AlleEinzige(chkBox) {
+
+
+        if(chkBox.getAttribute('id') == 'ALLE')
+            allindex = 1
+        
+
+        if(chkBox.getAttribute('id') == 'Einzige')
+        allindex = 0
+
+
+    }
+
+
+
+function mouseover(clicked_id)
+{
+  
+    document.getElementById(clicked_id).style.backgroundColor = 'rgb(196, 209, 196)'
+  
+}    
+
+
+function mouseout(clicked_id)
+{
+    
+    document.getElementById(clicked_id).style.backgroundColor = 'rgb(245, 248, 245)';
+ 
+}    
+
+var remove = function () {
       var s = [];
       for (var k in selected) {
         s.push({ id: k });
@@ -176,30 +232,57 @@
       ggraph.remove(s);
     };
 
+
     function reset(){
-        document.getElementById("node-count").innerHTML =
-                    graph.nodes.length;
-                  document.getElementById("edge-count").innerHTML =
-                    graph.links.length;
-                  converted = ggraph.convert(graph);
+
+        
+       graph = Originalgraph2
+       document.getElementById("node-count").innerHTML = Originalgraph2.nodes.length;
+                  document.getElementById("edge-count").innerHTML = Originalgraph2.links.length;
+                  converted = ggraph.convert(Originalgraph2);
                   ggraph.draw(converted);
                   reader.readAsDataURL(this.files[0]);
-
+                  let allindex = 0;
     }
+
     function _backbones(e) {
+
       var res = simmelian.filter(converted.all_links, 1);
       ggraph.filter_links(res);
+   
+      
+      
     }
 
     function _unbackbones(e) {
       var res = simmelian.filter(converted.all_links, 0);
       ggraph.filter_links(res);
+      
     }
+  
 
 
+    let Fehlendelinks = [];
+    var gefiltertgraph = {
+      nodes: [],
+      links: [],
+    };
     function _set_filter() {
+
       //selected node
       let s = [];
+
+      var graph00 = {
+      nodes: [],
+      links: [],
+    };
+
+    for (i = 0 ; i < graph.nodes.length; i++) 
+       graph00.nodes.push(graph.nodes[i]);
+
+       for (i = 0 ; i < graph.links.length; i++) 
+       graph00.links.push(graph.links[i]);
+
       for (var k in selected) s.push(k);
 
       var Filtered = s;
@@ -207,8 +290,8 @@
       if (Sink.includes(String(Object.values(Filtered)))) return;
 
       // node suchen
-      for (i = 0; i < graph.nodes.length; i++) {
-        if (graph.nodes[i].id == Filtered) {
+      for (i = 0; i < graph00.nodes.length; i++) {
+        if (graph00.nodes[i].id == Filtered) {
           // links filteren
           let NewLinks = [];
           let Newnodes = [];
@@ -217,81 +300,92 @@
           let Filtered0 = Filtered;
           let index = 0;
           let array2 = [];
-           
+          
           while (Bool) {
 
             let n = 0; 
-            for (j = 0; j < graph.links.length; j++) {
-              let A = graph.links[j].source
-              let B = graph.links[j].target
-
+            for (j = 0; j < graph00.links.length; j++) {
+              let A = graph00.links[j].source
+              let B = graph00.links[j].target
+               
               if (A == Filtered) {
                 n = 1;
                 index = j;
+                              
               }
               
              if(n == 1) {
 
                if(!(Sink.includes(B))) {
-                NewLinks.push(graph.links[j]);
+                NewLinks.push(graph00.links[j]);
 
             }
 
             //Sink  erreicht
              if (Sink.includes(B)) {
                NewSinks.push(B);
-               NewLinks.push(graph.links[j]);
-               
-               graph.links.splice(index, 1);
-               j =  graph.links.length;
+               NewLinks.push(graph00.links[j]);
+
+              graph00.links.splice(index, 1);
+        
+
+               j =  graph00.links.length;
             }
         }    
-        }
+        
+    }
                 //fertig
                 if (n == 0) {
                   Sink = NewSinks;
                   Bool = false;
-                  graph.links = [];
-                  graph.links = NewLinks;
+                  graph00.links = [];
+                  graph00.links = NewLinks;
                   let DeleteArray = [];
                  
                 //New nodes erstellen
-                for (j = 0; j < graph.links.length; j++)  {
-                  for (i = 0; i < graph.nodes.length; i++){ 
+                for (j = 0; j < graph00.links.length; j++)  {
+                  for (i = 0; i < graph00.nodes.length; i++){ 
 
-                  let A = graph.links[j].source
+                  let A = graph00.links[j].source
 
-                   if(A == graph.nodes[i].id){
-                    if (!(array2.indexOf(graph.nodes[i].id) > -1)) {
-                        array2.push(graph.nodes[i].id);
-                        Newnodes.push(graph.nodes[i]);
+                   if(A == graph00.nodes[i].id){
+                    if (!(array2.indexOf(graph00.nodes[i].id) > -1)) {
+                        array2.push(graph00.nodes[i].id);
+                        Newnodes.push(graph00.nodes[i]);
                    }
                   }
                          
                 }
 
-                for (i = 0; i < graph.nodes.length; i++){ 
-                let B = graph.links[j].target
+                for (i = 0; i < graph00.nodes.length; i++){ 
+                let B = graph00.links[j].target
 
-                    if(B == graph.nodes[i].id){
-                      if (!(array2.indexOf(graph.nodes[i].id) > -1)) {
-                      array2.push(graph.nodes[i].id);
-                     Newnodes.push(graph.nodes[i]);
+                    if(B == graph00.nodes[i].id){
+                      if (!(array2.indexOf(graph00.nodes[i].id) > -1)) {
+                      array2.push(graph00.nodes[i].id);
+                     Newnodes.push(graph00.nodes[i]);
       }
      }   
 }
-}
-                      graph.nodes = [];
-                      graph.nodes = Newnodes;  
+}   
+                    
+                        graph00.nodes = Newnodes;
+                        
+                        gefiltertgraph = graph00;
+
+                   
 
                   //Graph zeigen
                   document.getElementById("node-count").innerHTML =
-                    graph.nodes.length;
+                  graph00.nodes.length;
                   document.getElementById("edge-count").innerHTML =
-                    graph.links.length;
-                  converted = ggraph.convert(graph);
+                  graph00.links.length;
+                  converted = ggraph.convert(graph00);
                   ggraph.draw(converted);
-                  reader.readAsDataURL(this.files[0]);
+                 
+                 
+
+    
                 
               }
             }
@@ -301,20 +395,6 @@
       }
 
     
-    function _show_name() {
-      //selected node
-      let s = [];
-      
-      for (var k in selected){
-         s.push(k);
-
-         let s1 = String(s).split('(')[0];
-         let s2 = String(s1).split(' ')[2];
-      document.getElementById("comment").value = s2;
-      document.getElementById("comment1").click();
-    }
-}
-
 
     function _set_comment() {
       if (selection.all().length === 0) return;
@@ -373,7 +453,7 @@
         let a = document.createElement("a");
         a.download = "ss.png";
         a.href = canvas.toDataURL("image/png");
-        a.click();
+        a.click(); // MAY NOT ALWAYS WORK!
       });
     }
 
@@ -395,45 +475,45 @@ function onDownload() {
     JSONFILE = [];
 
      let n = -1;
-     for (i = 0; i < graph.nodes.length; i++) {
+     for (i = 0; i < gefiltertgraph.nodes.length; i++) {
 
-if (graph.nodes[i].type == 'Green' ) {
+if (gefiltertgraph.nodes[i].type == 'Green' ) {
     JSONFILE.push({
                   "id": i, 
                    "type": "sink", 
-                   "text": graph.nodes[i].id, 
+                   "text": gefiltertgraph.nodes[i].id, 
                    "children":[], 
                    "comment": ""
                   })
    
  } else {
-    if (graph.nodes[i].type == "")
+    if (gefiltertgraph.nodes[i].type == "")
       JSONFILE.push({
                    "id": i, 
                    "type": "source", 
-                   "text": graph.nodes[i].id, 
+                   "text": gefiltertgraph.nodes[i].id, 
                    "children":[], 
                    "comment": "" ,
                   })
                        
 
          else 
-         if(graph.nodes[i].type == "Orange")
+         if(gefiltertgraph.nodes[i].type == "Orange")
          JSONFILE.push({
                         "id": i, 
                         "type": "node", 
-                        "text": graph.nodes[i].id, 
+                        "text": gefiltertgraph.nodes[i].id, 
                         "children":[], 
                         "comment": ""
                       })
          }
       }
  
-      for (j = 0; j < graph.nodes.length ; j++)
-         for (i = 0; i < graph.links.length ; i++) {
-             if(graph.links[i].source == graph.nodes[j].id){
+      for (j = 0; j < gefiltertgraph.nodes.length ; j++)
+         for (i = 0; i < gefiltertgraph.links.length ; i++) {
+             if(gefiltertgraph.links[i].source == gefiltertgraph.nodes[j].id){
                  for(z = 0; z < JSONFILE.length ; z++)
-                      if(JSONFILE[z].text == graph.links[i].target)
+                      if(JSONFILE[z].text == gefiltertgraph.links[i].target)
                          if(!JSONFILE[j].children.includes(JSONFILE[z].id))
                               JSONFILE[j].children.push(JSONFILE[z].id)
              }
@@ -458,8 +538,15 @@ download(JSON.stringify(JSONFILE,null,3), "Test.json", "text/plain");
       SWITCH = !SWITCH;
        
     }
+    
 
     var graph = {
+      nodes: [],
+      links: [],
+    };
+ 
+ 
+    var Originalgraph2 = {
       nodes: [],
       links: [],
     };
@@ -474,7 +561,7 @@ download(JSON.stringify(JSONFILE,null,3), "Test.json", "text/plain");
       var up_File = file_input.files[0];
     
 
-       // xmL file 
+       // xmL file
       if (up_File.type === "text/xml") {
     
         let xmlContent = "";
@@ -505,9 +592,10 @@ download(JSON.stringify(JSONFILE,null,3), "Test.json", "text/plain");
                     let M = X.split(">");
                     
                     let C = S[0].split("<");
+                    
                     //let node = C[1] + " " + M[0];
-  
                     let node = M[0]
+                   
                     if (node.indexOf(")") == -1) {
                       node = node + "()";
                     }
@@ -549,14 +637,19 @@ download(JSON.stringify(JSONFILE,null,3), "Test.json", "text/plain");
                     Knoten.push(Methode[i]);
                     if (i + 1 == Methode.length) {
                       graph.nodes.push({ id: Methode[i], type: "Green" });
+                      Originalgraph2.nodes.push({ id: Methode[i], type: "Green" });
                       Sink.push(Methode[i]);
                     } else {
                       if (i  == 0){
                         graph.nodes.push({ id: Methode[i], type: "" });
+                        Originalgraph2.nodes.push({ id: Methode[i], type: "" });
                         Sources.push(Methode[i]);
                       }
-                      else graph.nodes.push({ id: Methode[i], type: "Orange" });
+                      else { 
+                        graph.nodes.push({ id: Methode[i], type: "Orange" });
+                        Originalgraph2.nodes.push({ id: Methode[i], type: "Orange" });
                     }
+                }
                   }
                 }
 
@@ -565,23 +658,32 @@ download(JSON.stringify(JSONFILE,null,3), "Test.json", "text/plain");
                     source: Methode[i],
                     target: Methode[i + 1],
                   });
+
+                  Originalgraph2.links.push({
+                    source: Methode[i],
+                    target: Methode[i + 1],
+                  });
+
                 
             }
               });
-           
+              Originalgraph = graph;
               document.getElementById("node-count").innerHTML =
                 graph.nodes.length;
               document.getElementById("edge-count").innerHTML =
                 graph.links.length;
-
+               
               converted = ggraph.convert(graph);
-
+              
+    
               ggraph.draw(converted);
+              
             });
           });
         });
         reader.readAsDataURL(this.files[0]);
         document.getElementById("mode-drag").click();
+        
       }
 
       //JSON File
@@ -624,7 +726,7 @@ download(JSON.stringify(JSONFILE,null,3), "Test.json", "text/plain");
             }
           }
           
-
+          Originalgraph2 = graph;
           document.getElementById("node-count").innerHTML = graph.nodes.length;
           document.getElementById("edge-count").innerHTML = graph.links.length;
 
@@ -637,6 +739,8 @@ download(JSON.stringify(JSONFILE,null,3), "Test.json", "text/plain");
         };
         reader.readAsText(up_File);
         document.getElementById("mode-drag").click();
+       
+        
        
        
       }

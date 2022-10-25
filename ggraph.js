@@ -51,8 +51,8 @@ var ggraph = (function() {
         if (!(member.group in node_cache)) {
           node_cache[member.group] = {
             x: group.x, y: group.y,
-            width: group.radius * 2,
-            height: group.radius * 2,
+            width: group.radius * 10,
+            height: group.radius * 10,
           };
           circles.push(node_cache[member.group]);
         }
@@ -68,7 +68,7 @@ var ggraph = (function() {
           cx: member.cx,
           cy: member.cy,
           width: member.label.width(),
-          height: member.label.height(),
+          height: member.label.height() + 20,
           label: member.label,
           group: group
         });
@@ -156,7 +156,6 @@ var ggraph = (function() {
       .force("center", d3.forceCenter(element.width / 2, element.height / 2))
       .force('charge', d3.forceManyBody().strength(charge))
       .force("link", d3.forceLink().id(function(d) { return d.id; }).strength(link_strength))
-        //.distance(100);
 
     callbacks.push(function() {
       select(false, timeout);
@@ -216,10 +215,11 @@ var ggraph = (function() {
     }
   };
 
+  //links length
   var link_strength = function(d) {
     if (d.filtered) return 0.01  / (d.source.members.length * d.target.members.length);
     if (d.source.members && d.source.members[0] && d.source.members[0].type === 'comment') return 1 / d.source.members[0].id.length;
-    return 1 / (d.source.members.length + d.target.members.length);
+    return 0.2 / (d.source.members.length + d.target.members.length);
   };
 
   var drag_start = function(d) {
